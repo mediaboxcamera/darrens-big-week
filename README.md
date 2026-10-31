@@ -31,17 +31,16 @@ Other scripts:
 ## Deploying to Vercel (current home)
 
 Live at **https://darrens-big-week.vercel.app** (Vercel project `darrens-big-week`,
-Hobby account jacobtriley-6284).
+Hobby account jacobtriley-6284), connected to GitHub repo **mediaboxcamera/darrens-big-week**.
 
-To push an update without git:
+**Every push to `main` deploys automatically.** Vercel runs `npm install` and `npm run build`
+(see `vercel.json`) and serves `dist/`. Commit, push (GitHub Desktop works fine), and the site
+updates about a minute later. Check progress on the project's Deployments page.
 
-1. `npm run build && node tools/build_flat.js` (writes `dist-flat/`: 90 files, no sub-folders,
-   because Vercel's browser upload flattens folders).
-2. Go to <https://vercel.com/new>, click *choose a folder*, pick `dist-flat`.
-3. Click **Deploy to an existing project instead**, choose `darrens-big-week`, deploy.
-
-Once the code is on GitHub, use **Connect Git** on the Vercel project instead: `vercel.json`
-already tells Vercel to run `npm run build` and serve `dist/`, so every push redeploys.
+Manual fallback, without git: `npm run build && node tools/build_flat.js`, then upload the
+`dist-flat/` folder at <https://vercel.com/new> and pick **Deploy to an existing project instead**
+→ `darrens-big-week`. (`dist-flat/` is one folder of files with cache-busting version tags,
+because Vercel's browser upload flattens sub-folders.)
 
 ## Deploying to Netlify Drop (alternative)
 
