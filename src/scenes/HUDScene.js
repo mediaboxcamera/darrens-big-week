@@ -19,9 +19,8 @@ export class HUDScene extends Phaser.Scene {
     this.add.image(78, 10, 'ui_coin').setDepth(1);
     this.coinText = this.add.bitmapText(88, 6, 'pix', '×0').setTint(WHITE).setDepth(1);
     // timer
-    this.add.bitmapText(140, 2, 'pix', 'TIME').setTint(GOLD).setDepth(1);
+    this.timeLabel = this.add.bitmapText(140, 2, 'pix', 'TIME').setTint(GOLD).setDepth(1);
     this.timeText = this.add.bitmapText(140, 11, 'pix', '400').setTint(WHITE).setDepth(1);
-    // score panel
     // score panel: the digits are centred in the blank area right of the crown.
     // Their position is derived from the panel's own size so they always stay inside.
     this.panel = this.add.image(W - 80, 14, 'ui_score_panel').setScale(0.75).setDepth(1);
@@ -38,7 +37,15 @@ export class HUDScene extends Phaser.Scene {
     this.events.once('shutdown', () => this.registry.events.off('changedata', this.onData, this));
     this.refresh();
   }
-  textShadow() { /* bitmap font is already high contrast; keep HUD light */ }
+  /** 1px navy drop shadow under the free-floating HUD text so it stays readable over clouds. */
+  textShadow() {
+    for (const t of [this.livesText, this.coinText, this.timeLabel, this.timeText]) {
+      const sh = this.add.bitmapText(t.x + 1, t.y + 1, 'pix', t.text).setOrigin(t.originX, t.originY).setTint(0x06122b).setDepth(0.9);
+      const orig = t.setText.bind(t);
+      t.setText = (v) => { sh.setText(v); return orig(v); };
+      t.shadow = sh;
+    }
+  }
   onData(parent, key) { this.refresh(key); }
   refresh() {
     const r = this.registry;
@@ -50,7 +57,7 @@ export class HUDScene extends Phaser.Scene {
     if (this.heart.texture.key !== (blue ? 'ui_heart_blue' : 'ui_heart')) this.heart.setTexture(blue ? 'ui_heart_blue' : 'ui_heart');
   }
   pulseHeart() { this.refresh(); this.tweens.add({ targets: this.heart, scaleX: 1.7, scaleY: 1.7, duration: 120, yoyo: true, ease: 'Quad.out' }); }
-  flashTime() { this.tweens.add({ targets: this.timeText, alpha: 0.2, duration: 150, yoyo: true, repeat: 5 }); }
+  flashTime() { this.tweens.add({ targets: [this.timeText, this.timeText.shadow], alpha: 0.2, duration: 150, yoyo: true, repeat: 5 }); }
 
   /** Called by GameScene.create on every (re)start. */
   reset() { this.clearOverlay(); this.refresh(); }
