@@ -28,7 +28,22 @@ Other scripts:
 | `npm test`         | builds, then runs the Playwright suite (3 emulated devices)      |
 | `npm run screens`  | builds, then takes screenshots of every screen per device        |
 
-## Deploying to Netlify Drop
+## Deploying to Vercel (current home)
+
+Live at **https://darrens-big-week.vercel.app** (Vercel project `darrens-big-week`,
+Hobby account jacobtriley-6284).
+
+To push an update without git:
+
+1. `npm run build && node tools/build_flat.js` (writes `dist-flat/`: 90 files, no sub-folders,
+   because Vercel's browser upload flattens folders).
+2. Go to <https://vercel.com/new>, click *choose a folder*, pick `dist-flat`.
+3. Click **Deploy to an existing project instead**, choose `darrens-big-week`, deploy.
+
+Once the code is on GitHub, use **Connect Git** on the Vercel project instead: `vercel.json`
+already tells Vercel to run `npm run build` and serve `dist/`, so every push redeploys.
+
+## Deploying to Netlify Drop (alternative)
 
 1. `npm run build`
 2. Open <https://app.netlify.com/drop> and drag the **`dist`** folder onto the page.
