@@ -50,7 +50,7 @@ test('screens', async ({ page }, info) => {
   await waitState(page, "s.phase === 'finale'", 8000);
   await keys(page, { right: false });
   await page.waitForTimeout(1400);
-  await shot('09_level_clear');
+  await shot('09_game_clear');
   await waitState(page, "s.hudOverlay === 'win'", 20000);
   await page.waitForTimeout(900);
   await shot('10_win');

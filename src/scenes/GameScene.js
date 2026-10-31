@@ -2,7 +2,7 @@
 // checkpoints, the flagpole finale. UI overlays live in HUDScene.
 import { TILE, VIEW_W, VIEW_H, ROWS, PHYS, RULES, SCORE } from '../constants.js';
 import { buildLevel } from '../level.js';
-import { T } from './BootScene.js';
+import { T, addSky, SKY_EDGE } from './BootScene.js';
 import { Player } from '../entities/Player.js';
 import { Enemy } from '../entities/Enemy.js';
 import { Item, Football, EnemyShot } from '../entities/Items.js';
@@ -59,8 +59,10 @@ export class GameScene extends Phaser.Scene {
 
   // ------------------------------------------------------------------ build
   buildBackground() {
-    this.cameras.main.setBackgroundColor('#6fb7ff');
-    this.stadium = this.add.tileSprite(0, this.groundTop + 10 - 93 * 1.7, VIEW_W / 1.7, 93, 'bg_stadium_tile').setOrigin(0).setScale(1.7).setScrollFactor(0).setDepth(-5);
+    this.cameras.main.setBackgroundColor(SKY_EDGE);
+    const stadiumY = this.groundTop + 10 - 93 * 1.7;
+    addSky(this, stadiumY + 1, Math.floor(stadiumY + 93 * 1.7) - 1);
+    this.stadium = this.add.tileSprite(0, stadiumY, VIEW_W / 1.7, 93, 'bg_stadium_tile').setOrigin(0).setScale(1.7).setScrollFactor(0).setDepth(-5);
     this.clouds = this.add.tileSprite(0, 6, VIEW_W, 48, 'strip_clouds').setOrigin(0).setScrollFactor(0).setDepth(-4);
     this.trees = this.add.tileSprite(0, this.groundTop - 54, VIEW_W, 54, 'strip_trees').setOrigin(0).setScrollFactor(0).setDepth(-3);
     this.bushes = this.add.tileSprite(0, this.groundTop - 32, VIEW_W, 32, 'strip_bushes').setOrigin(0).setScrollFactor(0).setDepth(-2);

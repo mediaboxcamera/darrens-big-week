@@ -12,7 +12,7 @@ const config = {
   parent: 'game',
   width: VIEW_W,
   height: VIEW_H,
-  backgroundColor: '#6fb7ff',
+  backgroundColor: '#074bb5',
   pixelArt: true,
   roundPixels: true,
   render: { antialias: false, powerPreference: 'high-performance' },

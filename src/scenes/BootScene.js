@@ -13,11 +13,31 @@ export const SPRITES = [
   'coin', 'trophy', 'heart', 'wing',
   'tile_ground', 'tile_dirt', 'tile_platform', 'platform_l', 'platform_m', 'platform_r', 'pipe', 'pipe_top', 'pipe_body',
   'block_question', 'block_used', 'brick', 'brick_breakable', 'ladder', 'ladder_tile', 'goal_flag', 'flag_banner', 'cloud', 'bush', 'tree', 'bg_stadium', 'castle',
-  'ui_logo', 'ui_heart', 'ui_coin', 'ui_score_panel', 'ui_pause', 'ui_checkpoint', 'cp_flag', 'cp_pole', 'ui_level_clear', 'ui_you_win', 'ui_game_over', 'ui_name_badge',
+  'ui_logo', 'ui_heart', 'ui_coin', 'ui_score_panel', 'ui_pause', 'ui_checkpoint', 'cp_flag', 'cp_pole', 'ui_game_clear', 'ui_you_win', 'ui_game_over', 'ui_name_badge',
 ];
 
 // Tile indices in the generated tileset (0 = empty)
 export const T = { EMPTY: 0, GROUND: 1, DIRT: 2, BRICK: 3, BREAKABLE: 4, QUESTION: 5, USED: 6, PIPE_TL: 7, PIPE_TR: 8, PIPE_BL: 9, PIPE_BR: 10, PLAT_L: 11, PLAT_M: 12, PLAT_R: 13, LADDER: 14, STAIR: 15 };
+
+// Night-sky colours: deep navy at the top of the screen fading into the
+// stadium image's own top-row blue, so there is no visible edge.
+export const SKY_TOP = '#03194f', SKY_EDGE = '#074bb5', PIT = '#06122b';
+
+/** Full-screen dark sky behind the stadium: navy at the top, stadium blue at edgeY,
+ *  and dark navy from pitY down (what shows through pits below the stadium art). */
+export function addSky(scene, edgeY, pitY = 240, depth = -6) {
+  const key = `sky_${Math.round(edgeY)}_${Math.round(pitY)}`;
+  if (!scene.textures.exists(key)) {
+    const c = scene.textures.createCanvas(key, 4, 240); const ctx = c.getContext();
+    const g = ctx.createLinearGradient(0, 0, 0, Math.max(1, edgeY));
+    g.addColorStop(0, SKY_TOP); g.addColorStop(1, SKY_EDGE);
+    ctx.fillStyle = g; ctx.fillRect(0, 0, 4, Math.max(1, edgeY));
+    ctx.fillStyle = SKY_EDGE; ctx.fillRect(0, Math.max(1, edgeY), 4, 240 - edgeY);
+    ctx.fillStyle = PIT; ctx.fillRect(0, pitY, 4, 240 - pitY);
+    c.refresh();
+  }
+  return scene.add.image(0, 0, key).setOrigin(0).setDisplaySize(scene.scale.width, 240).setScrollFactor(0).setDepth(depth);
+}
 
 export class BootScene extends Phaser.Scene {
   constructor() { super('Boot'); }
@@ -82,9 +102,14 @@ export class BootScene extends Phaser.Scene {
     strip('strip_clouds', [['cloud', 20, 4], ['cloud', 150, 22, true], ['cloud', 260, 0], ['cloud', 380, 18]], 480, 48);
     strip('strip_bushes', [['bush', 10, 0], ['bush', 200, 0, true], ['bush', 330, 0]], 480, 32);
     strip('strip_trees', [['tree', 60, 0], ['tree', 250, 0, true], ['tree', 400, 0]], 560, 54);
-    // seamless stadium: the image followed by its mirror image
+    // seamless stadium: the image followed by its mirror image. The outer 3px
+    // columns of the slice are a grey border, so trim them to avoid a seam line.
     const st = this.textures.get('bg_stadium').getSourceImage();
-    strip('bg_stadium_tile', [['bg_stadium', 0, 0], ['bg_stadium', st.width, 0, true]], st.width * 2, st.height);
+    const T3 = 3, sw = st.width - T3 * 2;
+    const c = this.textures.createCanvas('bg_stadium_tile', sw * 2, st.height); const cx = c.getContext();
+    cx.drawImage(st, T3, 0, sw, st.height, 0, 0, sw, st.height);
+    cx.save(); cx.translate(sw * 2, 0); cx.scale(-1, 1); cx.drawImage(st, T3, 0, sw, st.height, 0, 0, sw, st.height); cx.restore();
+    c.refresh();
   }
 
   buildParticleTextures() {

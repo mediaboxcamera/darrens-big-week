@@ -5,6 +5,7 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import crypto from 'crypto';
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const DIST = path.join(ROOT, 'dist');
 const OUT = path.join(ROOT, 'dist-flat');
@@ -30,9 +31,15 @@ for (const f of order) {
   let s = fs.readFileSync(f, 'utf8');
   s = s.replace(/^import\s.*?from\s+['"].*?['"];?\s*$/gm, '');
   s = s.replace(/^export\s+(const|let|class|function|async function)\b/gm, '$1');
-  s = s.replace(/`sprites\/\$\{s\}\.png`/g, '`${s}.png`'); // assets live at the root
+  s = s.replace(/`sprites\/\$\{s\}\.png`/g, '`${s}.png?v=__V__`'); // assets live at the root, versioned
   bundle += `\n// ---- ${path.relative(ROOT, f)} ----\n${s}\n`;
 }
+// cache-busting: every deploy gets a version derived from its content, so phones
+// (and home-screen web apps) that opened an older build fetch the new files
+const V = crypto.createHash('sha1').update(bundle).update(fs.readFileSync(path.join(DIST, 'style.css'))).digest('hex').slice(0, 8);
+const spriteHash = crypto.createHash('sha1'); for (const f of fs.readdirSync(path.join(DIST, 'sprites')).sort()) spriteHash.update(fs.readFileSync(path.join(DIST, 'sprites', f)));
+const VERSION = (V + spriteHash.digest('hex')).slice(0, 10);
+bundle = bundle.replace(/__V__/g, VERSION);
 fs.writeFileSync(path.join(OUT, 'game.js'), bundle);
 
 // --- copy assets flat ----------------------------------------------------------
@@ -43,6 +50,6 @@ cp(path.join(DIST, 'vendor/phaser.min.js'), 'phaser.min.js');
 cp(path.join(DIST, 'style.css'), 'style.css');
 fs.writeFileSync(path.join(OUT, 'manifest.webmanifest'), fs.readFileSync(path.join(DIST, 'manifest.webmanifest'), 'utf8').replace(/icons\//g, ''));
 let html = fs.readFileSync(path.join(DIST, 'index.html'), 'utf8')
-  .replace('vendor/phaser.min.js', 'phaser.min.js').replace('<script type="module" src="src/main.js"></script>', '<script src="game.js"></script>').replace(/icons\//g, '');
+  .replace('vendor/phaser.min.js', 'phaser.min.js').replace('<script type="module" src="src/main.js"></script>', `<script src="game.js?v=${VERSION}"></script>`).replace('href="style.css"', `href="style.css?v=${VERSION}"`).replace(/icons\//g, '');
 fs.writeFileSync(path.join(OUT, 'index.html'), html);
-console.log(`built dist-flat/ (${fs.readdirSync(OUT).length} files)`);
+console.log(`built dist-flat/ (${fs.readdirSync(OUT).length} files, version ${VERSION})`);

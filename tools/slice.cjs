@@ -117,7 +117,7 @@ const DEFS = [
   { name: 'goal_flag', region: [518, 624, 584, 719], sheet: 'sprites', scale: 1 },
   { name: 'flag_banner', region: [543, 628, 584, 667], sheet: 'sprites', mode: 'crop', height: 20 },
   { name: 'cloud', region: [583, 648, 662, 694], sheet: 'sprites', scale: 0.5 },
-  { name: 'bush', region: [610, 655, 752, 719], sheet: 'sprites', scale: 0.5 },
+  { name: 'bush', region: [610, 655, 752, 719], sheet: 'sprites', scale: 0.5, minInside: 0.95 }, // skip the cloud next to it
   { name: 'tree', region: [752, 626, 818, 719], sheet: 'sprites', scale: 0.6 },
   { name: 'bg_stadium', region: [822, 626, 962, 719], sheet: 'sprites', scale: 1, opaque: true },
   { name: 'castle', region: [975, 620, 1105, 719], sheet: 'sprites', height: 96 },
@@ -131,6 +131,7 @@ const DEFS = [
   { name: 'cp_flag', region: [1338, 553, 1429, 640], sheet: 'ui', mode: 'crop', scaleFrom: 'ui_checkpoint' },
   { name: 'cp_pole', region: [1278, 514, 1432, 721], sheet: 'ui', mode: 'crop', erase: [[1338, 553, 1432, 640]], scaleFrom: 'ui_checkpoint' },
   { name: 'ui_level_clear', region: [5, 702, 528, 967], sheet: 'ui', width: 220 },
+  { name: 'ui_game_clear', region: [5, 702, 528, 967], sheet: 'uiGameClear', width: 220 },
   { name: 'ui_you_win', region: [495, 717, 1016, 994], sheet: 'ui', width: 220 },
   { name: 'ui_game_over', region: [1047, 725, 1431, 1004], sheet: 'ui', width: 200 },
   { name: 'ui_name_badge', region: [36, 950, 441, 1080], sheet: 'ui', width: 160 },
@@ -307,10 +308,102 @@ function drawFlashBall() {
 }
 
 // ---------------------------------------------------------------------------
+/**
+ * The game has one level, so the banner should read GAME CLEAR, which is not in
+ * the art. Build it from the LEVEL CLEAR banner: paint the red ribbon over the
+ * word LEVEL, then paste the chunky GAME letters from the GAME OVER art,
+ * recoloured to the banner's gold gradient with the same dark outline.
+ * Returns a copy of the UI sheet with the edit applied (alpha/components unchanged).
+ */
+function makeGameClearSheet(ui) {
+  const { W } = ui; const data = Buffer.from(ui.data);
+  const get = (x, y) => { const i = idx(W, x, y); return [data[i], data[i + 1], data[i + 2], data[i + 3]]; };
+  const set = (x, y, [r, g, b]) => { const i = idx(W, x, y); data[i] = r; data[i + 1] = g; data[i + 2] = b; };
+  const isGold = ([r, g, b, a]) => a && r > 190 && g > 140 && b < 130;
+  const isRed = ([r, g, b, a]) => a && r > 140 && g < 95 && b < 95 && r > g * 1.9; // bright ribbon red only (dark edge pixels get repainted)
+  const lum = ([r, g, b]) => 0.3 * r + 0.59 * g + 0.11 * b;
+
+  // --- locate the word LEVEL (gold pixels on the ribbon's top line) ---------
+  let lx0 = W, ly0 = 1e9, lx1 = 0, ly1 = 0;
+  // rows 800-848 hold the letters; the gold rim and dark border above them belong to the ribbon
+  for (let y = 800; y <= 849; y++) for (let x = 152; x <= 385; x++) if (isGold(get(x, y))) { lx0 = Math.min(lx0, x); lx1 = Math.max(lx1, x); ly0 = Math.min(ly0, y); ly1 = Math.max(ly1, y); }
+  // gold palette per row of the letters (average gold colour on each row)
+  const goldRows = [];
+  for (let y = ly0; y <= ly1; y++) { let r = 0, g = 0, b = 0, n = 0; for (let x = lx0; x <= lx1; x++) { const p = get(x, y); if (isGold(p)) { r += p[0]; g += p[1]; b += p[2]; n++; } } goldRows.push(n ? [r / n, g / n, b / n] : goldRows[goldRows.length - 1] || [250, 200, 40]); }
+  // outline colour = darkest common pixel just outside the letters
+  const outline = [28, 8, 4];
+
+  // --- paint the ribbon over LEVEL: per row, interpolate between red pixels --
+  const ex0 = lx0 - 18, ex1 = lx1 + 18, ey0 = ly0, ey1 = ly1 + 5;
+  for (let y = ey0; y <= ey1; y++) {
+    const reds = []; for (let x = ex0 - 30; x <= ex1 + 30; x++) if (isRed(get(x, y))) reds.push(x);
+    if (!reds.length) continue;
+    const row = []; for (let x = ex0 - 30; x <= ex1 + 30; x++) row.push(get(x, y));
+    for (let x = ex0; x <= ex1; x++) {
+      if (isRed(get(x, y))) continue;
+      let L = null, R = null;
+      for (const rx of reds) { if (rx < x) L = rx; else if (R === null && rx > x) R = rx; }
+      const cl = L !== null ? row[L - (ex0 - 30)] : row[R - (ex0 - 30)], cr = R !== null ? row[R - (ex0 - 30)] : cl;
+      const t = L !== null && R !== null ? (x - L) / (R - L) : 0;
+      set(x, y, [0, 1, 2].map(k => Math.round(cl[k] * (1 - t) + cr[k] * t)));
+    }
+  }
+
+  // --- cut GAME out of the GAME OVER art (light grey letter bodies) ---------
+  let gx0 = W, gy0 = 1e9, gx1 = 0, gy1 = 0; const body = [];
+  for (let y = 792; y <= 866; y++) for (let x = 1095; x <= 1365; x++) { // GAME only (stones above end at 790)
+    const p = get(x, y); if (!p[3]) continue;
+    const sat = Math.max(p[0], p[1], p[2]) - Math.min(p[0], p[1], p[2]);
+    if (lum(p) > 105 && sat < 45) { body.push([x, y, lum(p)]); gx0 = Math.min(gx0, x); gx1 = Math.max(gx1, x); gy0 = Math.min(gy0, y); gy1 = Math.max(gy1, y); }
+  }
+  // drop stray blobs (light pixels on the stones): keep only big connected letter shapes
+  { const key = new Map(body.map((p) => [p[0] + ',' + p[1], p])); const seen = new Set(); const keep = [];
+    for (const p of body) {
+      const k0 = p[0] + ',' + p[1]; if (seen.has(k0)) continue;
+      const comp = [], st = [p]; seen.add(k0);
+      while (st.length) { const q = st.pop(); comp.push(q);
+        for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { const k = (q[0] + dx) + ',' + (q[1] + dy); if (key.has(k) && !seen.has(k)) { seen.add(k); st.push(key.get(k)); } } }
+      if (comp.length >= 300) keep.push(...comp);
+    }
+    body.length = 0; body.push(...keep);
+    gx0 = W; gy0 = 1e9; gx1 = 0; gy1 = 0; for (const [x, y] of body) { gx0 = Math.min(gx0, x); gx1 = Math.max(gx1, x); gy0 = Math.min(gy0, y); gy1 = Math.max(gy1, y); } }
+  const gw = gx1 - gx0 + 1, gh = gy1 - gy0 + 1;
+  // scale GAME to the height of LEVEL, keep proportions, nearest-neighbour
+  const lh = ly1 - ly0 + 1, sc = lh / gh;
+  const tw = Math.min(lx1 - lx0 + 1, Math.round(gw * sc * 1.1)), th = lh; // a touch wider to match CLEAR's letterforms
+  const mask = new Uint8Array(gw * gh), shade = new Float32Array(gw * gh);
+  let maxL = 0; for (const [, , l] of body) maxL = Math.max(maxL, l);
+  for (const [x, y, l] of body) { mask[(y - gy0) * gw + (x - gx0)] = 1; shade[(y - gy0) * gw + (x - gx0)] = l / maxL; }
+  const ox = Math.round((lx0 + lx1) / 2 - tw / 2), oy = ly0;
+  const scaled = new Uint8Array(tw * th), sshade = new Float32Array(tw * th);
+  for (let y = 0; y < th; y++) for (let x = 0; x < tw; x++) {
+    const sx = Math.min(gw - 1, Math.floor(x * gw / tw)), sy = Math.min(gh - 1, Math.floor(y / sc));
+    scaled[y * tw + x] = mask[sy * gw + sx]; sshade[y * tw + x] = shade[sy * gw + sx];
+  }
+  // dark outline: dilate the letters by R px (matches LEVEL's outline weight)
+  const R = 7;
+  for (let y = -R; y < th + R; y++) for (let x = -R; x < tw + R; x++) {
+    let near = false;
+    for (let dy = -R; dy <= R && !near; dy++) for (let dx = -R; dx <= R; dx++) {
+      if (dx * dx + dy * dy > R * R) continue;
+      const xx = x + dx, yy = y + dy; if (xx >= 0 && yy >= 0 && xx < tw && yy < th && scaled[yy * tw + xx]) { near = true; break; }
+    }
+    if (near) set(ox + x, oy + y, outline);
+  }
+  // letter bodies: banner gold gradient by row, shaded by the original lightness
+  for (let y = 0; y < th; y++) for (let x = 0; x < tw; x++) {
+    if (!scaled[y * tw + x]) continue;
+    const g = goldRows[Math.min(goldRows.length - 1, y)], k = Math.max(0.62, Math.min(1.08, 0.35 + sshade[y * tw + x] * 0.75));
+    set(ox + x, oy + y, g.map(c => Math.min(255, Math.round(c * k))));
+  }
+  return { ...ui, data };
+}
+
 async function main() {
   fs.mkdirSync(OUT, { recursive: true });
   const sheets = {};
   for (const [k, spec] of Object.entries(SHEETS)) { sheets[k] = await loadSheet(spec); console.log(`${k}: ${sheets[k].comps.length} components`); }
+  sheets.uiGameClear = makeGameClearSheet(sheets.ui);
 
   // Pass 1: extract native-res sprites
   const native = {};

@@ -22,9 +22,13 @@ export class HUDScene extends Phaser.Scene {
     this.add.bitmapText(140, 2, 'pix', 'TIME').setTint(GOLD).setDepth(1);
     this.timeText = this.add.bitmapText(140, 11, 'pix', '400').setTint(WHITE).setDepth(1);
     // score panel
-    // score panel (75x28): digits sit centred in the blank area right of the crown
+    // score panel: the digits are centred in the blank area right of the crown.
+    // Their position is derived from the panel's own size so they always stay inside.
     this.panel = this.add.image(W - 80, 14, 'ui_score_panel').setScale(0.75).setDepth(1);
-    this.scoreText = this.add.bitmapText(W - 71, 14, 'pix', '000000').setOrigin(0.5, 0.5).setTint(GOLD).setDepth(1);
+    const pw = this.panel.displayWidth, src = this.panel.width;
+    const innerL = 26 / 100 * src, innerR = (src - 7) / 100 * src; // blank area in the 100px-wide art
+    const cx = this.panel.x - pw / 2 + ((innerL + innerR) / 2) * (pw / src);
+    this.scoreText = this.add.bitmapText(Math.round(cx), Math.round(this.panel.y), 'pix', '000000').setOrigin(0.5, 0.5).setTint(GOLD).setDepth(1);
     // pause button (big invisible hit area)
     this.pauseBtn = this.add.image(W - 14, 12, 'ui_pause').setScale(0.8).setDepth(1).setInteractive({ useHandCursor: true });
     this.pauseBtn.input.hitArea.setTo(-14, -14, 50, 50);
@@ -97,13 +101,13 @@ export class HUDScene extends Phaser.Scene {
       if (this.overlay !== 'gameover') return;
       this.time.addEvent({ delay: 450, loop: true, callback: () => tap.setAlpha(tap.alpha ? 0 : 1) });
       bg.once('pointerup', () => { audio.sfx('click'); this.clearOverlay(); onRestart(); });
-      this.button(VIEW_W / 2, 212, 90, 22, 'TITLE', () => { this.clearOverlay(); onTitle(); });
+      this.button(VIEW_W / 2, 212, 104, 22, 'HOME SCREEN', () => { this.clearOverlay(); onTitle(); });
     });
   }
 
   showLevelClear() {
     this.clearOverlay(); this.overlay = 'clear';
-    const img = this.image(VIEW_W / 2, -70, 'ui_level_clear').setScale(0.85);
+    const img = this.image(VIEW_W / 2, -70, 'ui_game_clear').setScale(0.85);
     this.tweens.add({ targets: img, y: 64, duration: 700, ease: 'Back.out' });
   }
 
@@ -116,7 +120,7 @@ export class HUDScene extends Phaser.Scene {
     const pad = (s, n = 6) => String(s).padStart(n, '0');
     const rows = [['SCORE', pad(stats.score)], ['COINS', String(stats.coins)], ['TIME', String(stats.time)], ['HIGH SCORE', pad(stats.highScore) + (stats.isNew ? ' NEW!' : '')]];
     rows.forEach(([k, v], i) => { this.text(VIEW_W / 2 - 80, 122 + i * 13, k, 0xcfe3ff, 1, 0).setOrigin(0, 0.5); this.text(VIEW_W / 2 + 80, 122 + i * 13, v, stats.isNew && i === 3 ? 0x80ff80 : WHITE, 1, 1).setOrigin(1, 0.5); });
-    this.button(VIEW_W / 2 - 52, 200, 96, 26, 'PLAY AGAIN', () => { this.clearOverlay(); onAgain(); });
-    this.button(VIEW_W / 2 + 56, 200, 80, 26, 'TITLE', () => { this.clearOverlay(); onTitle(); });
+    this.button(VIEW_W / 2 - 56, 200, 104, 26, 'PLAY AGAIN', () => { this.clearOverlay(); onAgain(); });
+    this.button(VIEW_W / 2 + 56, 200, 104, 26, 'HOME SCREEN', () => { this.clearOverlay(); onTitle(); });
   }
 }

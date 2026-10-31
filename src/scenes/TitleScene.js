@@ -2,13 +2,16 @@
 import { VIEW_W, VIEW_H } from '../constants.js';
 import { audio } from '../audio.js';
 import { loadHighScore } from '../storage.js';
+import { addSky, SKY_EDGE } from './BootScene.js';
 
 export class TitleScene extends Phaser.Scene {
   constructor() { super('Title'); }
   create() {
     const W = VIEW_W, H = VIEW_H;
-    this.cameras.main.setBackgroundColor('#6fb7ff');
-    this.stadium = this.add.tileSprite(0, H - 24 - 93 * 1.7 + 8, W / 1.7, 93, 'bg_stadium_tile').setOrigin(0, 0).setScale(1.7).setAlpha(0.9);
+    this.cameras.main.setBackgroundColor(SKY_EDGE);
+    const stadiumY = H - 24 - 93 * 1.7 + 8;
+    addSky(this, stadiumY + 1);
+    this.stadium = this.add.tileSprite(0, stadiumY, W / 1.7, 93, 'bg_stadium_tile').setOrigin(0, 0).setScale(1.7).setAlpha(0.9);
     this.clouds = this.add.tileSprite(0, 10, W, 48, 'strip_clouds').setOrigin(0, 0);
     this.ground = this.add.tileSprite(0, H - 24, W, 24, 'tile_ground').setOrigin(0, 0);
     this.add.rectangle(0, 0, W, H, 0x000000, 0.25).setOrigin(0);
