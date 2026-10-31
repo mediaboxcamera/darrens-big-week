@@ -35,6 +35,7 @@ window.addEventListener('resize', () => layout(game));
 window.addEventListener('orientationchange', () => setTimeout(() => layout(game), 50));
 if (window.visualViewport) window.visualViewport.addEventListener('resize', () => layout(game));
 layout(game);
+game.events.once('ready', () => layout(game));
 
 // Pause when the tab is hidden
 document.addEventListener('visibilitychange', () => {

@@ -103,5 +103,5 @@ export function layout(game) {
     gameEl.style.width = '100%'; gameEl.style.height = gh + 'px';
     gameEl.style.paddingTop = sat + 'px';
   }
-  if (game) setTimeout(() => game.scale.refresh(), 0);
+  if (game && game.isBooted) setTimeout(() => game.scale.refresh(), 0);
 }

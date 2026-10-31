@@ -3,3 +3,4 @@ dist/
 tests/output/
 tests/screenshots/
 .DS_Store
+dist-flat/
