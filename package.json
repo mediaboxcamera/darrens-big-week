@@ -1,0 +1,29 @@
+{
+  "name": "darrens-big-week",
+  "version": "1.0.0",
+  "description": "Darren's Big Week - a mobile-first Phaser 3 platformer",
+  "directories": {
+    "test": "tests"
+  },
+  "scripts": {
+    "slice": "node tools/slice.cjs",
+    "verify": "node tools/verify_level.js",
+    "build": "node tools/build.js",
+    "start": "node tools/serve.js dist 8080",
+    "test": "npm run build && npx playwright test",
+    "screens": "npm run build && npx playwright test tests/screens.spec.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "dependencies": {
+    "phaser": "^3.90.0",
+    "sharp": "^0.34.2"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.64.1",
+    "playwright": "^1.64.1"
+  },
+  "private": true
+}

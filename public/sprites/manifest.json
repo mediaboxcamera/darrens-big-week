@@ -1,0 +1,336 @@
+{
+ "tile": 24,
+ "sprites": {
+  "darren_idle": {
+   "w": 54,
+   "h": 56
+  },
+  "darren_walk1": {
+   "w": 54,
+   "h": 56
+  },
+  "darren_walk2": {
+   "w": 54,
+   "h": 56
+  },
+  "darren_run1": {
+   "w": 54,
+   "h": 56
+  },
+  "darren_run2": {
+   "w": 54,
+   "h": 56
+  },
+  "darren_jump": {
+   "w": 54,
+   "h": 56
+  },
+  "darren_airborne": {
+   "w": 54,
+   "h": 56
+  },
+  "darren_throw": {
+   "w": 54,
+   "h": 56
+  },
+  "darren_crouch": {
+   "w": 54,
+   "h": 56
+  },
+  "darren_hurt": {
+   "w": 54,
+   "h": 56
+  },
+  "darren_dead": {
+   "w": 54,
+   "h": 56
+  },
+  "tear_1": {
+   "w": 54,
+   "h": 56
+  },
+  "tear_2": {
+   "w": 54,
+   "h": 56
+  },
+  "tear_3": {
+   "w": 54,
+   "h": 56
+  },
+  "tear_4": {
+   "w": 54,
+   "h": 56
+  },
+  "tear_5": {
+   "w": 54,
+   "h": 56
+  },
+  "tear_6": {
+   "w": 54,
+   "h": 56
+  },
+  "tear_7": {
+   "w": 54,
+   "h": 56
+  },
+  "buff_idle": {
+   "w": 54,
+   "h": 56
+  },
+  "buff_walk1": {
+   "w": 54,
+   "h": 56
+  },
+  "buff_walk2": {
+   "w": 54,
+   "h": 56
+  },
+  "buff_run1": {
+   "w": 54,
+   "h": 56
+  },
+  "buff_run2": {
+   "w": 54,
+   "h": 56
+  },
+  "buff_jump": {
+   "w": 54,
+   "h": 56
+  },
+  "buff_throw": {
+   "w": 54,
+   "h": 56
+  },
+  "face_normal_1": {
+   "w": 14,
+   "h": 20
+  },
+  "face_normal_2": {
+   "w": 14,
+   "h": 20
+  },
+  "face_normal_3": {
+   "w": 13,
+   "h": 20
+  },
+  "face_normal_4": {
+   "w": 14,
+   "h": 20
+  },
+  "face_normal_5": {
+   "w": 13,
+   "h": 20
+  },
+  "item_football": {
+   "w": 16,
+   "h": 14
+  },
+  "item_beer": {
+   "w": 13,
+   "h": 24
+  },
+  "enemy_referee": {
+   "w": 27,
+   "h": 28
+  },
+  "flag_yellow": {
+   "w": 10,
+   "h": 9
+  },
+  "enemy_dog": {
+   "w": 30,
+   "h": 23
+  },
+  "enemy_fan": {
+   "w": 26,
+   "h": 29
+  },
+  "enemy_tackler": {
+   "w": 39,
+   "h": 22
+  },
+  "obstacle_cone": {
+   "w": 21,
+   "h": 24
+  },
+  "obstacle_hedge": {
+   "w": 48,
+   "h": 29
+  },
+  "enemy_paparazzi": {
+   "w": 37,
+   "h": 28
+  },
+  "enemy_security": {
+   "w": 38,
+   "h": 34
+  },
+  "coin": {
+   "w": 12,
+   "h": 16
+  },
+  "trophy": {
+   "w": 24,
+   "h": 24
+  },
+  "heart": {
+   "w": 17,
+   "h": 16
+  },
+  "wing": {
+   "w": 18,
+   "h": 18
+  },
+  "tile_ground": {
+   "w": 24,
+   "h": 24
+  },
+  "tile_platform": {
+   "w": 72,
+   "h": 30
+  },
+  "pipe": {
+   "w": 48,
+   "h": 69
+  },
+  "block_question": {
+   "w": 24,
+   "h": 24
+  },
+  "brick": {
+   "w": 24,
+   "h": 24
+  },
+  "brick_breakable": {
+   "w": 24,
+   "h": 24
+  },
+  "ladder": {
+   "w": 24,
+   "h": 60
+  },
+  "goal_flag": {
+   "w": 62,
+   "h": 95
+  },
+  "flag_banner": {
+   "w": 22,
+   "h": 20
+  },
+  "cloud": {
+   "w": 37,
+   "h": 19
+  },
+  "bush": {
+   "w": 69,
+   "h": 32
+  },
+  "tree": {
+   "w": 37,
+   "h": 54
+  },
+  "bg_stadium": {
+   "w": 135,
+   "h": 93
+  },
+  "castle": {
+   "w": 127,
+   "h": 96
+  },
+  "ui_logo": {
+   "w": 300,
+   "h": 95
+  },
+  "ui_heart": {
+   "w": 15,
+   "h": 14
+  },
+  "ui_coin": {
+   "w": 14,
+   "h": 14
+  },
+  "ui_score_panel": {
+   "w": 100,
+   "h": 38
+  },
+  "ui_pause": {
+   "w": 22,
+   "h": 20
+  },
+  "ui_checkpoint": {
+   "w": 35,
+   "h": 48
+  },
+  "cp_flag": {
+   "w": 22,
+   "h": 18
+  },
+  "cp_pole": {
+   "w": 32,
+   "h": 48
+  },
+  "ui_level_clear": {
+   "w": 220,
+   "h": 111
+  },
+  "ui_you_win": {
+   "w": 220,
+   "h": 116
+  },
+  "ui_game_over": {
+   "w": 200,
+   "h": 143
+  },
+  "ui_name_badge": {
+   "w": 160,
+   "h": 50
+  },
+  "tile_dirt": {
+   "w": 24,
+   "h": 24
+  },
+  "pipe_top": {
+   "w": 48,
+   "h": 24
+  },
+  "pipe_body": {
+   "w": 48,
+   "h": 24
+  },
+  "platform_l": {
+   "w": 24,
+   "h": 30
+  },
+  "platform_m": {
+   "w": 24,
+   "h": 30
+  },
+  "platform_r": {
+   "w": 24,
+   "h": 30
+  },
+  "ladder_tile": {
+   "w": 24,
+   "h": 24
+  },
+  "block_used": {
+   "w": 24,
+   "h": 24
+  },
+  "shirt_piece": {
+   "w": 6,
+   "h": 6
+  },
+  "flash_ball": {
+   "w": 10,
+   "h": 10
+  }
+ },
+ "frames": {
+  "player": {
+   "w": 54,
+   "h": 56,
+   "anchor": "bottom-center"
+  }
+ }
+}

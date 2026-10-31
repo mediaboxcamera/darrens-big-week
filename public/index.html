@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Darren's Big Week</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Darren's Big Week">
+  <meta name="theme-color" content="#0b1f44">
+  <meta name="description" content="Darren's Big Week - a one-level platformer celebrating the Week 7 champion.">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" href="icons/icon-180.png">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="app">
+    <div id="game"></div>
+    <div id="controls" aria-hidden="true">
+      <div class="pad pad-left">
+        <button class="btn btn-dir" id="btn-left" data-action="left"><span>&#9664;</span></button>
+        <button class="btn btn-dir" id="btn-right" data-action="right"><span>&#9654;</span></button>
+      </div>
+      <div class="pad pad-right">
+        <button class="btn btn-throw" id="btn-throw" data-action="throw"><span>THROW</span></button>
+        <button class="btn btn-jump" id="btn-jump" data-action="jump"><span>JUMP</span></button>
+      </div>
+    </div>
+  </div>
+  <script src="vendor/phaser.min.js"></script>
+  <script type="module" src="src/main.js"></script>
+</body>
+</html>
