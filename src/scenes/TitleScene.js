@@ -18,8 +18,7 @@ export class TitleScene extends Phaser.Scene {
     this.logo = this.add.image(W / 2, 62, 'ui_logo').setScale(0.95);
     this.tweens.add({ targets: this.logo, y: 66, duration: 1400, yoyo: true, repeat: -1, ease: 'Sine.inOut' });
     this.add.bitmapText(W / 2, 122, 'pix', 'WEEK 7 CHAMPION EDITION').setOrigin(0.5).setTint(0xffe07a);
-    this.add.image(W / 2 - 46, 150, 'face_normal_1').setScale(0.9);
-    this.add.image(W / 2 + 16, 150, 'darren_idle').setOrigin(0.5, 0.5);
+    this.add.image(W / 2, 150, 'darren_idle').setOrigin(0.5, 0.5); // full-body Darren, centred under the title
     this.tap = this.add.bitmapText(W / 2, 188, 'pix', 'TAP TO START').setOrigin(0.5).setScale(1.5).setTint(0xffffff);
     this.time.addEvent({ delay: 450, loop: true, callback: () => this.tap.setVisible(!this.tap.visible) });
     const hs = loadHighScore();
