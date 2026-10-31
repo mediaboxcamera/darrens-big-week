@@ -3,7 +3,7 @@ import { TILE, PHYS, RULES, SCORE } from '../constants.js';
 import { audio } from '../audio.js';
 
 const KIND = {
-  fan:       { tex: 'enemy_fan', speed: 35, faceRight: false, stomp: true, score: 200 },
+  fan:       { tex: 'enemy_fan', speed: 35, faceRight: true, stomp: true, score: 200 },
   dog:       { tex: 'enemy_dog', speed: 45, faceRight: true, stomp: true, score: 200, chase: 120 },
   tackler:   { tex: 'enemy_tackler', speed: 0, faceRight: false, stomp: true, score: 300, charge: 230 },
   referee:   { tex: 'enemy_referee', speed: 0, faceRight: false, stomp: true, score: 300 },

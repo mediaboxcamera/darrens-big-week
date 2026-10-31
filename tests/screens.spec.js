@@ -45,7 +45,7 @@ test('screens', async ({ page }, info) => {
   await waitState(page, "s.phase === 'play' && s.hudOverlay === null && s.lives === 2", 10000);
   // win
   const gx = await dbg(page, 'goalX');
-  await dbg(page, 'teleport', gx - 60);
+  await dbg(page, 'teleport', gx - 36);
   await keys(page, { right: true });
   await waitState(page, "s.phase === 'finale'", 8000);
   await keys(page, { right: false });

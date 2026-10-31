@@ -10,6 +10,7 @@ export const SPRITES = [
   'face_normal_1', 'face_normal_2', 'face_normal_3', 'face_normal_4', 'face_normal_5',
   'item_football', 'item_beer', 'flag_yellow', 'flash_ball', 'shirt_piece',
   'enemy_referee', 'enemy_dog', 'enemy_fan', 'enemy_tackler', 'obstacle_cone', 'obstacle_hedge', 'enemy_paparazzi', 'enemy_security',
+  'jake_idle', 'jake_bounce', 'jake_crouch', 'jake_jump', 'jake_peak', 'jake_fall', 'jake_land', 'jake_return',
   'coin', 'trophy', 'heart', 'wing',
   'tile_ground', 'tile_dirt', 'tile_platform', 'platform_l', 'platform_m', 'platform_r', 'pipe', 'pipe_top', 'pipe_body',
   'block_question', 'block_used', 'brick', 'brick_breakable', 'ladder', 'ladder_tile', 'goal_flag', 'flag_banner', 'cloud', 'bush', 'tree', 'bg_stadium', 'castle',
@@ -55,6 +56,7 @@ export class BootScene extends Phaser.Scene {
     this.buildAnimations();
     this.buildParallax();
     this.buildParticleTextures();
+    this.buildWater();
     this.buildBlueHeart();
     this.scene.start('Title');
   }
@@ -92,14 +94,20 @@ export class BootScene extends Phaser.Scene {
   buildParallax() {
     const strip = (key, items, w, h) => {
       const canvas = this.textures.createCanvas(key, w, h); const ctx = canvas.getContext();
-      for (const [img, x, y, flip] of items) {
+      for (const [img, x, , flip] of items) {
         const src = this.textures.get(img).getSourceImage();
+        const y = h - src.height; // bottom-align: every bush/tree base sits on the strip's bottom edge
         if (flip) { ctx.save(); ctx.translate(x + src.width, y); ctx.scale(-1, 1); ctx.drawImage(src, 0, 0); ctx.restore(); }
         else ctx.drawImage(src, x, y);
       }
       canvas.refresh();
     };
-    strip('strip_clouds', [['cloud', 20, 4], ['cloud', 150, 22, true], ['cloud', 260, 0], ['cloud', 380, 18]], 480, 48);
+    // clouds float, so they keep their own heights (drawn separately, not bottom-aligned)
+    { const c = this.textures.createCanvas('strip_clouds', 480, 48); const ctx = c.getContext(); const src = this.textures.get('cloud').getSourceImage();
+      for (const [x, y, flip] of [[20, 4], [150, 22, true], [260, 0], [380, 18]]) {
+        if (flip) { ctx.save(); ctx.translate(x + src.width, y); ctx.scale(-1, 1); ctx.drawImage(src, 0, 0); ctx.restore(); } else ctx.drawImage(src, x, y);
+      }
+      c.refresh(); }
     strip('strip_bushes', [['bush', 10, 0], ['bush', 200, 0, true], ['bush', 330, 0]], 480, 32);
     strip('strip_trees', [['tree', 60, 0], ['tree', 250, 0, true], ['tree', 400, 0]], 560, 54);
     // seamless stadium: the image followed by its mirror image. The outer 3px
@@ -109,6 +117,17 @@ export class BootScene extends Phaser.Scene {
     const c = this.textures.createCanvas('bg_stadium_tile', sw * 2, st.height); const cx = c.getContext();
     cx.drawImage(st, T3, 0, sw, st.height, 0, 0, sw, st.height);
     cx.save(); cx.translate(sw * 2, 0); cx.scale(-1, 1); cx.drawImage(st, T3, 0, sw, st.height, 0, 0, sw, st.height); cx.restore();
+    c.refresh();
+  }
+
+  /** 24x48 tileable water for pits: foam line, a wave crest and a light-to-deep blue body. */
+  buildWater() {
+    const c = this.textures.createCanvas('water', 24, 48); const ctx = c.getContext();
+    const g = ctx.createLinearGradient(0, 0, 0, 48); g.addColorStop(0, '#6fd0ff'); g.addColorStop(0.35, '#3aa7ea'); g.addColorStop(1, '#1d6fc4');
+    ctx.fillStyle = g; ctx.fillRect(0, 3, 24, 45);
+    ctx.fillStyle = '#e6f8ff'; // wave crest: a gentle bump every 12px so it tiles at 24px
+    for (let x = 0; x < 24; x++) { const yy = Math.round(2 + Math.sin(x / 24 * Math.PI * 4) * 1.5); ctx.fillRect(x, yy, 1, 2); }
+    ctx.fillStyle = 'rgba(255,255,255,0.35)'; ctx.fillRect(3, 10, 5, 1); ctx.fillRect(15, 18, 4, 1); ctx.fillRect(8, 28, 6, 1);
     c.refresh();
   }
 

@@ -6,6 +6,7 @@ import { T, addSky, SKY_EDGE } from './BootScene.js';
 import { Player } from '../entities/Player.js';
 import { Enemy } from '../entities/Enemy.js';
 import { Item, Football, EnemyShot } from '../entities/Items.js';
+import { Jake } from '../entities/Jake.js';
 import { audio } from '../audio.js';
 import { input, setThrowVisible } from '../controls.js';
 import { loadHighScore, saveHighScore } from '../storage.js';
@@ -40,6 +41,7 @@ export class GameScene extends Phaser.Scene {
 
     this.buildBackground();
     this.buildMap();
+    this.buildWater();
     this.buildParticles();
     this.buildEntities();
     this.buildPlayer();
@@ -102,12 +104,37 @@ export class GameScene extends Phaser.Scene {
     this.layer.calculateFacesWithin(0, 0, cols, rows);
   }
 
+  /** Light-blue animated water in every pit (columns with no ground in the bottom row). */
+  buildWater() {
+    const { cols, rows, grid } = this.level;
+    this.pits = []; this.waterTop = this.groundTop + 7;
+    for (let c = 0; c < cols; c++) {
+      if (grid[rows - 1][c] !== ' ') continue;
+      let w = 0; while (c + w < cols && grid[rows - 1][c + w] === ' ') w++;
+      this.pits.push({ x0: c * TILE, x1: (c + w) * TILE });
+      c += w - 1;
+    }
+    this.water = this.pits.map(p => this.add.tileSprite(p.x0, this.waterTop, p.x1 - p.x0, this.levelH - this.waterTop + 8, 'water').setOrigin(0).setDepth(1));
+    this.splashed = false;
+  }
+  /** Splash once when Darren drops into a pit's water. */
+  updateSplash() {
+    for (const w of this.water) w.tilePositionX = (this.time.now * 0.012) % 24;
+    const P = this.player;
+    if (this.splashed || !P || P.y < this.waterTop + 4) return;
+    if (!this.pits.some(p => P.x > p.x0 && P.x < p.x1)) return;
+    this.splashed = true;
+    this.splash.explode(16, P.x, this.waterTop + 2);
+    audio.sfx('splash');
+  }
+
   buildParticles() {
     const mk = (tex, cfg) => this.add.particles(0, 0, tex, { emitting: false, ...cfg }).setDepth(12);
     this.dust = mk('px_dust', { speed: { min: 15, max: 45 }, angle: { min: 200, max: 340 }, lifespan: 320, scale: { start: 1, end: 0 }, gravityY: 150, maxAliveParticles: 40 });
     this.sparkle = mk('px_gold', { speed: { min: 30, max: 80 }, angle: { min: 0, max: 360 }, lifespan: 400, scale: { start: 1.5, end: 0 }, maxAliveParticles: 40 });
     this.debris = mk('px_brick', { speed: { min: 80, max: 160 }, angle: { min: 220, max: 320 }, lifespan: 900, gravityY: 600, rotate: { start: 0, end: 360 }, maxAliveParticles: 30 });
     this.shirt = mk('shirt_piece', { speed: { min: 60, max: 150 }, angle: { min: 200, max: 340 }, lifespan: 1000, gravityY: 300, rotate: { start: 0, end: 720 }, alpha: { start: 1, end: 0 }, maxAliveParticles: 30 });
+    this.splash = mk('px_white', { speed: { min: 60, max: 150 }, angle: { min: 230, max: 310 }, lifespan: 600, gravityY: 500, scale: { start: 1, end: 0.3 }, tint: [0xbfeaff, 0xffffff, 0x6fd0ff], maxAliveParticles: 30 });
     this.fire = mk('px_white', { speed: { min: 40, max: 120 }, angle: { min: 0, max: 360 }, lifespan: { min: 500, max: 900 }, gravityY: 60, scale: { start: 1, end: 0 }, maxAliveParticles: 120, tint: [0xff4040, 0xffe066, 0x60c0ff, 0xffffff, 0x80ff80] });
   }
 
@@ -119,6 +146,7 @@ export class GameScene extends Phaser.Scene {
     this.obstacles = this.physics.add.staticGroup();
     this.footballs = this.add.group({ classType: Football, maxSize: RULES.maxFootballs });
     this.shots = this.add.group();
+    this.jakes = this.add.group();
     this.checkpoints = [];
     const cpIndex = (this.registry.get('checkpoint') || {}).index ?? -1;
     for (const e of this.level.entities) {
@@ -148,6 +176,7 @@ export class GameScene extends Phaser.Scene {
           break;
         }
         case 'castle': this.castle = this.add.image(x, y, 'castle').setOrigin(0.5, 1).setDepth(1); break;
+        case 'jake': this.jake = new Jake(this, x, y); this.jakes.add(this.jake); break;
       }
     }
   }
@@ -179,6 +208,9 @@ export class GameScene extends Phaser.Scene {
     ph.add.overlap(P, this.shots, (p, s) => { if (p.hurt()) s.destroy(); }, undefined, this);
     ph.add.overlap(this.footballs, this.enemies, (f, e) => { if (e.alive && f.active) { f.disable(); this.puff(f.x, f.y); e.hit(true); } }, undefined, this);
     ph.add.overlap(this.footballs, this.blockers, (f, e) => { if (e.alive && f.active) { f.disable(); this.puff(f.x, f.y); e.hit(true); audio.sfx('bump'); } }, undefined, this);
+    // Jake: any touch is a lost life, shield or not. Footballs bounce off him.
+    ph.add.overlap(P, this.jakes, () => { this.popText(P.x, P.y - 50, 'JAKED!', 0xff6060); P.die(); }, () => P.state === 'normal', this);
+    ph.add.overlap(this.footballs, this.jakes, (f, j) => { if (f.active) { j.deflect(f); f.disable(); } }, undefined, this);
     for (const cp of this.checkpoints) ph.add.overlap(P, cp.zone, () => this.activateCheckpoint(cp), () => !cp.active && P.state === 'normal', this);
     ph.add.overlap(P, this.goalZone, () => this.startFinale(), () => this.phase === 'play' && P.state === 'normal', this);
   }
@@ -200,6 +232,8 @@ export class GameScene extends Phaser.Scene {
     for (const it of this.items.getChildren()) it.update(dt);
     for (const f of this.footballs.getChildren()) f.update(dt);
     for (const s of this.shots.getChildren()) s.update(dt);
+    for (const j of this.jakes.getChildren()) j.update(cam);
+    this.updateSplash();
 
     // camera: smooth, slight look-ahead, never backwards
     if (this.phase !== 'dying') {
@@ -474,6 +508,8 @@ export class GameScene extends Phaser.Scene {
       blockers: () => this.blockers.getChildren().map(b => ({ x: b.x, y: b.y, alive: b.alive, hp: b.hp })),
       balls: () => this.footballs.getChildren().map(f => ({ a: f.active, x: Math.round(f.x), y: Math.round(f.y) })),
       goalX: () => this.goal.x,
+      jake: () => this.jake ? { x: this.jake.x, y: this.jake.y, groundY: this.jake.groundY, phase: this.jake.phase, airborne: this.jake.airborne } : null,
+      footballAt: (x, y, dir = 1) => { const f = this.footballs.getFirstDead(false) || (() => { const n = new Football(this); this.footballs.add(n); return n; })(); f.fire(x, y, dir); return true; },
       checkpointX: (i) => this.checkpoints[i].x,
     };
   }

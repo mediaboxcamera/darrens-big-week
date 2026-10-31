@@ -197,7 +197,7 @@ test.describe('Darren\'s Big Week - gameplay rules', () => {
   test('reaching the flag -> level clear -> win screen with stats', async ({ page }) => {
     await openGame(page);
     const gx = await dbg(page, 'goalX');
-    await dbg(page, 'teleport', gx - 60);
+    await dbg(page, 'teleport', gx - 36);
     await keys(page, { right: true });
     await waitState(page, "s.phase === 'finale'", 8000);
     await keys(page, { right: false });
@@ -206,5 +206,47 @@ test.describe('Darren\'s Big Week - gameplay rules', () => {
     const s = await state(page);
     expect(s.score).toBeGreaterThan(100);
     expect(await page.evaluate(() => parseInt(localStorage.getItem('dbw_highscore'), 10))).toBe(s.score);
+  });
+
+  test('Jake: running under him while he is airborne gets you to the steps', async ({ page }) => {
+    await openGame(page);
+    const j0 = await dbg(page, 'jake');
+    // stand ~3.5 tiles left of Jake and wait for him to wake up and launch
+    await dbg(page, 'teleport', j0.x - 84);
+    await page.waitForFunction(() => window.__dbw.scene.debug.jake().phase === 'rise', null, { timeout: 15000 });
+    await keys(page, { right: true });
+    await page.waitForFunction((jx) => window.__dbw.state().player.x > jx + 60 || window.__dbw.state().phase !== 'play', j0.x, { timeout: 6000 });
+    await keys(page, { right: false });
+    const s = await state(page);
+    expect(s.phase).toBe('play');
+    expect(s.player.x).toBeGreaterThan(j0.x + 60);
+    expect(s.lives).toBe(3);
+  });
+
+  test('Jake: touching him costs a life even when shirtless', async ({ page }) => {
+    await openGame(page);
+    await dbg(page, 'spawnItem', 'beer');
+    await waitState(page, 's.buff === true && s.phase === "play"', 8000);
+    const j0 = await dbg(page, 'jake');
+    await dbg(page, 'teleport', j0.x - 60);
+    await page.waitForFunction(() => window.__dbw.scene.debug.jake().phase === 'idle', null, { timeout: 15000 });
+    await keys(page, { right: true });
+    await waitState(page, "s.phase === 'dying'", 6000);
+    await keys(page, { right: false });
+    await waitForRespawn(page, 3);
+    expect((await state(page)).lives).toBe(2);
+  });
+
+  test('Jake: footballs bounce off him', async ({ page }) => {
+    await openGame(page);
+    const j0 = await dbg(page, 'jake');
+    await dbg(page, 'teleport', j0.x - 110);
+    await page.waitForFunction(() => window.__dbw.scene.debug.jake().phase === 'idle', null, { timeout: 15000 });
+    await dbg(page, 'footballAt', j0.x - 40, j0.groundY - 24, 1);
+    await page.waitForTimeout(600);
+    const j1 = await dbg(page, 'jake');
+    expect(j1).not.toBeNull();
+    expect((await state(page)).footballs).toBe(0);
+    expect((await state(page)).score).toBe(0);
   });
 });

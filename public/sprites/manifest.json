@@ -237,6 +237,38 @@
    "w": 127,
    "h": 96
   },
+  "jake_idle": {
+   "w": 48,
+   "h": 62
+  },
+  "jake_bounce": {
+   "w": 48,
+   "h": 62
+  },
+  "jake_crouch": {
+   "w": 48,
+   "h": 62
+  },
+  "jake_jump": {
+   "w": 48,
+   "h": 62
+  },
+  "jake_peak": {
+   "w": 48,
+   "h": 62
+  },
+  "jake_fall": {
+   "w": 48,
+   "h": 62
+  },
+  "jake_land": {
+   "w": 48,
+   "h": 62
+  },
+  "jake_return": {
+   "w": 48,
+   "h": 62
+  },
   "ui_logo": {
    "w": 300,
    "h": 95
@@ -334,6 +366,11 @@
   "player": {
    "w": 54,
    "h": 56,
+   "anchor": "bottom-center"
+  },
+  "jake": {
+   "w": 48,
+   "h": 62,
    "anchor": "bottom-center"
   }
  }

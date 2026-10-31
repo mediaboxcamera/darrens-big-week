@@ -46,6 +46,8 @@ const SHEETS = {
       [0, 479, 200, 503], [814, 479, 960, 503], [0, 610, 200, 640]],
   },
   ui: { file: 'assets/sheet_ui.png', barRects: [], eraseRects: [] },
+  // Jake boss sheet: header bar + numbered label pills are erased by rect
+  jake: { file: 'assets/sheet_jake.png', barRects: [], eraseRects: [[0, 0, 740, 80], [0, 470, 1447, 525], [0, 978, 1447, 1040]] },
 };
 
 // ---------------------------------------------------------------------------
@@ -121,6 +123,15 @@ const DEFS = [
   { name: 'tree', region: [752, 626, 818, 719], sheet: 'sprites', scale: 0.6 },
   { name: 'bg_stadium', region: [822, 626, 962, 719], sheet: 'sprites', scale: 1, opaque: true },
   { name: 'castle', region: [975, 620, 1105, 719], sheet: 'sprites', height: 96 },
+  // --- Jake (final boss). Largest shape only (drops motion marks), ground shadow stripped.
+  { name: 'jake_idle', region: [40, 85, 320, 470], sheet: 'jake', set: 'jake', refHeight: 60, largestOnly: true, stripShadow: true },
+  { name: 'jake_bounce', region: [370, 85, 690, 470], sheet: 'jake', set: 'jake', largestOnly: true, stripShadow: true },
+  { name: 'jake_crouch', region: [730, 85, 1060, 470], sheet: 'jake', set: 'jake', largestOnly: true, stripShadow: true },
+  { name: 'jake_jump', region: [1080, 70, 1420, 440], sheet: 'jake', set: 'jake', largestOnly: true, stripShadow: true },
+  { name: 'jake_peak', region: [30, 525, 350, 945], sheet: 'jake', set: 'jake', largestOnly: true, stripShadow: true },
+  { name: 'jake_fall', region: [395, 580, 705, 945], sheet: 'jake', set: 'jake', largestOnly: true, stripShadow: true },
+  { name: 'jake_land', region: [740, 640, 1070, 978], sheet: 'jake', set: 'jake', largestOnly: true, stripShadow: true },
+  { name: 'jake_return', region: [1100, 580, 1420, 978], sheet: 'jake', set: 'jake', largestOnly: true, stripShadow: true },
   // --- UI sheet -----------------------------------------------------------
   { name: 'ui_logo', region: [26, 2, 1420, 445], sheet: 'ui', mode: 'crop', width: 300 },
   { name: 'ui_heart', region: [55, 578, 180, 700], sheet: 'ui', height: 14 },
@@ -227,12 +238,22 @@ function extract(sheet, def) {
       return (ix * iy) / ((c.x1 - c.x0 + 1) * (c.y1 - c.y0 + 1)) >= minInside;
     });
     if (!chosen.length) throw new Error(`No components for ${def.name}`);
+    if (def.largestOnly) { chosen.sort((a, b) => b.n - a.n); chosen.length = 1; }
     for (const c of chosen) for (const p of c.px) {
       const x = p % W, y = (p / W) | 0;
       if (x < rx0 || x > rx1 || y < ry0 || y > ry1) continue; // clip to region
       const si = p * 4, di = idx(rw, x - rx0, y - ry0);
       out[di] = data[si]; out[di + 1] = data[si + 1]; out[di + 2] = data[si + 2]; out[di + 3] = 255;
     }
+  }
+  if (def.stripShadow) { // remove the navy ground-shadow ellipse attached under the feet
+    let bottom = -1; for (let y = rh - 1; y >= 0 && bottom < 0; y--) for (let x = 0; x < rw; x++) if (out[idx(rw, x, y) + 3]) { bottom = y; break; }
+    for (let y = Math.max(0, bottom - 24); y <= bottom; y++) for (let x = 0; x < rw; x++) {
+      const i = idx(rw, x, y); if (!out[i + 3]) continue;
+      const r = out[i], g = out[i + 1], b = out[i + 2];
+      if (b > 50 && b - r > 30 && b >= g) out[i + 3] = 0;
+    }
+    keepLargest(out, rw, rh);
   }
   if (def.erase) for (const [x0, y0, x1, y1] of def.erase) {
     for (let y = y0; y < y1; y++) for (let x = x0; x < x1; x++) {
@@ -247,6 +268,20 @@ function extract(sheet, def) {
   const tw = x1 - x0 + 1, th = y1 - y0 + 1, trimmed = Buffer.alloc(tw * th * 4);
   for (let y = 0; y < th; y++) out.copy(trimmed, idx(tw, 0, y), idx(rw, x0, y0 + y), idx(rw, x0, y0 + y) + tw * 4);
   return { buf: trimmed, w: tw, h: th, sheetX: rx0 + x0, sheetY: ry0 + y0 };
+}
+
+/** Keep only the largest 8-connected opaque shape in a raw RGBA buffer. */
+function keepLargest(buf, w, h) {
+  const lab = new Int32Array(w * h).fill(-1); const sizes = []; const st = [];
+  for (let s0 = 0; s0 < w * h; s0++) {
+    if (!buf[s0 * 4 + 3] || lab[s0] >= 0) continue;
+    const id = sizes.length; let n = 0; lab[s0] = id; st.push(s0);
+    while (st.length) { const p = st.pop(); n++; const x = p % w, y = (p / w) | 0;
+      for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) { const nx = x + dx, ny = y + dy; if (nx < 0 || ny < 0 || nx >= w || ny >= h) continue; const q = ny * w + nx; if (buf[q * 4 + 3] && lab[q] < 0) { lab[q] = id; st.push(q); } } }
+    sizes.push(n);
+  }
+  const best = sizes.indexOf(Math.max(...sizes));
+  for (let i = 0; i < w * h; i++) if (lab[i] >= 0 && lab[i] !== best) buf[i * 4 + 3] = 0;
 }
 
 /** Resize a raw RGBA sprite, then binarise alpha for crisp pixel art. */
@@ -420,6 +455,7 @@ async function main() {
   }
   for (const def of DEFS) if (def.scaleFrom) scaleOf[def.name] = scaleOf[def.scaleFrom];
   for (const def of DEFS) if (def.set === 'player' && !scaleOf[def.name]) scaleOf[def.name] = scaleOf.darren_idle;
+  for (const def of DEFS) if (def.set === 'jake' && !scaleOf[def.name]) scaleOf[def.name] = scaleOf.jake_idle;
 
   // Pass 3: scale
   const scaled = {};
@@ -432,10 +468,12 @@ async function main() {
 
   // Pass 4: normalise animation sets to a shared frame (bottom-centre anchor)
   const manifest = { tile: TILE, sprites: {}, frames: {} };
-  const playerDefs = DEFS.filter(d => d.set === 'player');
-  const fw = Math.max(...playerDefs.map(d => scaled[d.name].w)), fh = Math.max(...playerDefs.map(d => scaled[d.name].h));
-  for (const d of playerDefs) scaled[d.name] = frame(scaled[d.name], fw, fh);
-  manifest.frames.player = { w: fw, h: fh, anchor: 'bottom-center' };
+  for (const set of [...new Set(DEFS.filter(d => d.set).map(d => d.set))]) {
+    const defs = DEFS.filter(d => d.set === set);
+    const fw = Math.max(...defs.map(d => scaled[d.name].w)), fh = Math.max(...defs.map(d => scaled[d.name].h));
+    for (const d of defs) scaled[d.name] = frame(scaled[d.name], fw, fh);
+    manifest.frames[set] = { w: fw, h: fh, anchor: 'bottom-center' };
+  }
 
   // Pass 5: post-processing + derived tiles
   const out = {};

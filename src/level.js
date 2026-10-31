@@ -21,6 +21,8 @@
 //   f  rival fan (walks)   d  dog (patrols, chases)   k  tackling player (charges)
 //   r  referee (throws flags)   z  paparazzi (camera flash)   s  security guard
 //   n  traffic cone (solid, hurts from the side)   g  hedge (solid, hurts from the side)
+//   J  JAKE, the final boss: jumps straight up and down; run under him while he's airborne.
+//      Touching him always costs a life (even shirtless) and footballs bounce off him.
 // ---------------------------------------------------------------------------
 
 export const SECTIONS = [
@@ -102,7 +104,7 @@ export const SECTIONS = [
     '########################  ###########################  ###########  ############   ####################',
     '########################  ###########################  ###########  ############   ####################',
   ],
-  // 7. FINALE: staircase, goal flagpole, castle.
+  // 7. FINALE: Jake guards the staircase; flagpole right after the top step, then the castle.
   [
     '                                                            ',
     '                                                            ',
@@ -111,7 +113,7 @@ export const SECTIONS = [
     '                 ##                                         ',
     '                ###                                         ',
     '               ####                                         ',
-    '              #####          G             K                ',
+    '       J      #####  G        K                             ',
     '############################################################',
     '############################################################',
   ],
@@ -122,7 +124,7 @@ export const SOLID_CHARS = new Set(['#', '=', 'B', 'X', 'Y', 'Z', '?', 'Q', 'H',
 export const ENTITY_CHARS = {
   S: 'start', C: 'checkpoint', G: 'goal', K: 'castle',
   c: 'coin', t: 'trophy', h: 'heart', w: 'wing',
-  f: 'fan', d: 'dog', k: 'tackler', r: 'referee', z: 'paparazzi', s: 'security', n: 'cone', g: 'hedge',
+  f: 'fan', d: 'dog', k: 'tackler', r: 'referee', z: 'paparazzi', s: 'security', n: 'cone', g: 'hedge', J: 'jake',
 };
 
 /**

@@ -93,6 +93,7 @@ S  start   C  checkpoint   G  goal flagpole   K  castle
 c  coin    t  trophy       h  heart (1-up)    w  wing (1-up)
 f  rival fan   d  dog   k  tackler   r  referee   z  paparazzi   s  security
 n  cone (solid, hurts from the side)   g  hedge (solid, hurts from the side)
+J  JAKE, the final boss (jumps straight up and down in front of the stairs)
 ```
 
 Things in the legend "stand" on the tile below them. After editing, run
@@ -152,6 +153,15 @@ blocks must be 3 rows above the surface you jump from.
   saved in `localStorage` (try/catch everywhere).
 * Camera: smooth with look-ahead, never scrolls backwards; Darren cannot walk
   off the left edge of the screen.
+* **Jake (final boss)** guards the staircase. He loops one big, telegraphed jump
+  (idle, bounce, crouch-and-shake, launch, hang at the top, slam down) with a
+  shadow that shows where he'll land. Run under him while he's in the air.
+  Touching him always costs a life, even shirtless, and footballs bounce off.
+  Timings live at the top of `src/entities/Jake.js`; sprites come from
+  `assets/sheet_jake.png` via the slicer (ground shadows stripped, shared baseline).
+* The goal flag stands 3 tiles past the top step, so a jump off the top grabs it
+  high for the 5000-point maximum.
+* Pits are animated water with a splash when Darren falls in.
 
 ## Sprite pipeline decisions
 

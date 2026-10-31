@@ -125,6 +125,7 @@ export class AudioSys {
       case 'bounce': T({ f: 250, f2: 400, type: 'square', dur: 0.08, vol: 0.12 }); break;
       case 'bark': T({ f: 500, f2: 300, type: 'sawtooth', dur: 0.1, vol: 0.12 }); break;
       case 'charge': N({ dur: 0.3, vol: 0.15, lp: 900 }); break;
+      case 'splash': N({ dur: 0.45, vol: 0.35, lp: 1800 }); T({ f: 300, f2: 90, type: 'sine', dur: 0.3, vol: 0.2 }); break;
       case 'tick': T({ f: 1000, type: 'square', dur: 0.02, vol: 0.08 }); break;
       default: break;
     }
