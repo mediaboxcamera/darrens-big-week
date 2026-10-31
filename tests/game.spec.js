@@ -249,4 +249,21 @@ test.describe('Darren\'s Big Week - gameplay rules', () => {
     expect((await state(page)).footballs).toBe(0);
     expect((await state(page)).score).toBe(0);
   });
+
+  test('flagpole: a high jump off the top step cannot sail over the pole', async ({ page }) => {
+    await openGame(page);
+    const gx = await dbg(page, 'goalX');
+    // stand on the top step (column 377, surface y = 72) and do a full, held running jump
+    await dbg(page, 'teleport', 377 * 24 + 12, 72);
+    await page.waitForTimeout(300);
+    const s0 = (await state(page)).score;
+    await keys(page, { right: true, jump: true });
+    await waitState(page, "s.phase === 'finale'", 5000);
+    await keys(page, { right: false, jump: false });
+    const s = await state(page);
+    expect(s.player.x).toBeLessThanOrEqual(gx);        // stopped at the pole, not past it
+    expect(s.score - s0).toBe(5000);                   // top-of-pole score
+    await page.waitForTimeout(1300);                   // slide finished: he's at the bottom
+    expect((await state(page)).player.y).toBeGreaterThan(180);
+  });
 });

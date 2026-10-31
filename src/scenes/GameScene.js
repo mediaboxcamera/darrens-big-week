@@ -172,7 +172,10 @@ export class GameScene extends Phaser.Scene {
           this.goal = { x, y };
           this.add.image(x, y, 'pole').setOrigin(0.5, 1).setDepth(3);
           this.goalFlag = this.add.image(x + 2, y - TILE * 7 + 6, 'flag_banner').setOrigin(0, 0).setDepth(3);
-          const zone = this.add.zone(x, y - TILE * 3.5, 8, TILE * 7); this.physics.add.existing(zone, true); this.goalZone = zone;
+          // The catch zone runs from the ground to far above the screen, so a jump that
+          // would sail over the pole still grabs it (at the top) instead of passing it.
+          const zoneTop = -400;
+          const zone = this.add.zone(x, (zoneTop + y) / 2, 8, y - zoneTop); this.physics.add.existing(zone, true); this.goalZone = zone;
           break;
         }
         case 'castle': this.castle = this.add.image(x, y, 'castle').setOrigin(0.5, 1).setDepth(1); break;
@@ -457,9 +460,11 @@ export class GameScene extends Phaser.Scene {
     P.body.setVelocity(0, 0); P.body.allowGravity = false; P.x = this.goal.x - 9; P.setFlipX(false);
     P.anims.play(P.prefix + 'climb', true); P.anims.pause();
     const poleTop = this.goal.y - TILE * 7;
-    const frac = Phaser.Math.Clamp((this.goal.y - P.y) / (TILE * 7 - 30), 0, 1);
+    const frac = Phaser.Math.Clamp((this.goal.y - P.y) / (TILE * 7 - 30), 0, 1); // measured before any snap
+    // caught above the pole? snap him onto the top of it (he keeps the top score)
+    if (P.y < poleTop + PHYS.bodyH) P.y = poleTop + PHYS.bodyH;
     const pts = Phaser.Math.Clamp(SCORE.flagMin + Math.round(frac * 49) * 100, SCORE.flagMin, SCORE.flagMax);
-    this.addScore(pts, P.x, P.y - 48);
+    this.addScore(pts, P.x + 22, Math.max(P.y - 48, 44)); // keep the popup below the HUD
     audio.stopMusic(); audio.sfx('flagpole');
     this.timerEvent.paused = true;
     this.tweens.add({ targets: P, y: this.goal.y, duration: 1100, ease: 'Sine.in' });
