@@ -22,8 +22,9 @@ export class HUDScene extends Phaser.Scene {
     this.add.bitmapText(140, 2, 'pix', 'TIME').setTint(GOLD).setDepth(1);
     this.timeText = this.add.bitmapText(140, 11, 'pix', '400').setTint(WHITE).setDepth(1);
     // score panel
-    this.panel = this.add.image(W - 76, 12, 'ui_score_panel').setScale(0.62).setDepth(1);
-    this.scoreText = this.add.bitmapText(W - 66, 12, 'pix', '000000').setOrigin(0, 0.5).setTint(GOLD).setDepth(1);
+    // score panel (75x28): digits sit centred in the blank area right of the crown
+    this.panel = this.add.image(W - 80, 14, 'ui_score_panel').setScale(0.75).setDepth(1);
+    this.scoreText = this.add.bitmapText(W - 71, 14, 'pix', '000000').setOrigin(0.5, 0.5).setTint(GOLD).setDepth(1);
     // pause button (big invisible hit area)
     this.pauseBtn = this.add.image(W - 14, 12, 'ui_pause').setScale(0.8).setDepth(1).setInteractive({ useHandCursor: true });
     this.pauseBtn.input.hitArea.setTo(-14, -14, 50, 50);
