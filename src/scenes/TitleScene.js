@@ -3,6 +3,7 @@ import { VIEW_W, VIEW_H } from '../constants.js';
 import { audio } from '../audio.js';
 import { loadHighScore } from '../storage.js';
 import { addSky, SKY_EDGE } from './BootScene.js';
+import { needsHomeScreenTip } from '../fullscreen.js';
 
 export class TitleScene extends Phaser.Scene {
   constructor() { super('Title'); }
@@ -30,6 +31,8 @@ export class TitleScene extends Phaser.Scene {
     this.muteBtn.on('pointerdown', (p, lx, ly, ev) => { audio.unlock(); audio.toggleMute(); this.refreshMute(); audio.sfx('click'); ev.stopPropagation(); });
     this.game.events.on('mutechanged', this.refreshMute, this);
     this.add.bitmapText(6, H - 8, 'pix', 'ARROWS/WASD MOVE  SPACE JUMP  X THROW').setOrigin(0, 1).setTint(0xcfe3ff).setAlpha(0.8).setVisible(!(('ontouchstart' in window) || navigator.maxTouchPoints > 0));
+    // iPhone Safari can't hide its bars for a web page; a Home Screen launch can
+    if (needsHomeScreenTip) this.add.bitmapText(6, H - 8, 'pix', 'FULL SCREEN: SHARE > ADD TO HOME SCREEN').setOrigin(0, 1).setTint(0xcfe3ff).setAlpha(0.85);
     // the jingle can only play once audio has been unlocked by a tap (e.g. returning from the game)
     if (audio.ready) audio.playMusic('title');
     this.input.on('pointerdown', () => { audio.unlock(); this.start(); });

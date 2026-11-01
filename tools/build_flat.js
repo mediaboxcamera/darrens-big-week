@@ -48,6 +48,7 @@ for (const f of fs.readdirSync(path.join(DIST, 'sprites'))) cp(path.join(DIST, '
 for (const f of fs.readdirSync(path.join(DIST, 'icons'))) cp(path.join(DIST, 'icons', f), f);
 cp(path.join(DIST, 'vendor/phaser.min.js'), 'phaser.min.js');
 cp(path.join(DIST, 'style.css'), 'style.css');
+cp(path.join(DIST, 'og-image.png'), 'og-image.png');
 fs.writeFileSync(path.join(OUT, 'manifest.webmanifest'), fs.readFileSync(path.join(DIST, 'manifest.webmanifest'), 'utf8').replace(/icons\//g, ''));
 let html = fs.readFileSync(path.join(DIST, 'index.html'), 'utf8')
   .replace('vendor/phaser.min.js', 'phaser.min.js').replace('<script type="module" src="src/main.js"></script>', `<script src="game.js?v=${VERSION}"></script>`).replace('href="style.css"', `href="style.css?v=${VERSION}"`).replace(/icons\//g, '');

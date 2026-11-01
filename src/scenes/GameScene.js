@@ -18,6 +18,8 @@ export class GameScene extends Phaser.Scene {
     const r = this.registry;
     if (data.fresh || r.get('lives') === undefined) {
       r.set({ lives: RULES.startLives, score: 0, coins: 0, time: RULES.startTime, buff: false, checkpoint: null, highScore: loadHighScore() });
+      // run stats for the win screen / share text (mutated in place, so no HUD refresh per frame)
+      r.set('stats', { kos: 0, deaths: 0, ms: 0 });
     } else {
       r.set({ time: RULES.startTime, buff: false });
     }
@@ -222,6 +224,7 @@ export class GameScene extends Phaser.Scene {
   update(time, delta) {
     const dt = Math.min(delta, 50) / 1000;
     const cam = this.cameras.main;
+    if ((this.phase === 'play' || this.phase === 'tear' || this.phase === 'dying') && !this.paused) this.stats.ms += delta; // clock stops at the flag
     if (this.phase === 'play' || this.phase === 'tear') {
       this.player.update(dt, input.state);
       this.handleHeadBump();
@@ -434,7 +437,7 @@ export class GameScene extends Phaser.Scene {
   }
   afterDeath() {
     const lives = this.registry.get('lives') - 1;
-    this.registry.set('lives', lives);
+    this.registry.set('lives', lives); this.stats.deaths++;
     if (lives <= 0) {
       this.phase = 'gameover'; audio.playMusic('gameover');
       this.hud.showGameOver(() => this.scene.restart({ fresh: true }), () => this.goTitle());
@@ -442,6 +445,7 @@ export class GameScene extends Phaser.Scene {
       this.hud.showRespawnCard(lives, () => this.scene.restart({ fresh: false }));
     }
   }
+  get stats() { let st = this.registry.get('stats'); if (!st) { st = { kos: 0, deaths: 0, ms: 0 }; this.registry.set('stats', st); } return st; }
   goTitle() { this.scene.stop('HUD'); this.scene.start('Title'); }
 
   // ---------------------------------------------------------- checkpoints
@@ -495,7 +499,8 @@ export class GameScene extends Phaser.Scene {
     this.phase = 'won';
     const score = this.registry.get('score'); let hs = this.registry.get('highScore'); const isNew = score > hs;
     if (isNew) { hs = score; saveHighScore(hs); this.registry.set('highScore', hs); }
-    this.hud.showWin({ score, coins: this.registry.get('coins'), time: this.registry.get('time'), highScore: hs, isNew },
+    const st = this.stats;
+    this.hud.showWin({ score, coins: this.registry.get('coins'), time: this.registry.get('time'), highScore: hs, isNew, kos: st.kos, deaths: st.deaths, ms: st.ms },
       () => this.scene.restart({ fresh: true }), () => this.goTitle());
   }
 

@@ -95,6 +95,7 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
       if (this.hp > 0) return false;
     }
     this.alive = false;
+    this.scene.stats.kos++;
     this.body.checkCollision.none = true; this.body.setImmovable(false); this.body.allowGravity = true; this.body.moves = true;
     this.setFlipY(true).setVelocity(byFootball ? Math.sign(this.x - this.scene.player.x) * 90 : (Math.random() - 0.5) * 60, -220);
     this.setDepth(9);

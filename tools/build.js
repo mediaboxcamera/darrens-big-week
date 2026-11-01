@@ -32,4 +32,16 @@ fs.writeFileSync(path.join(DIST, 'manifest.webmanifest'), JSON.stringify({
   background_color: '#0b1f44', theme_color: '#0b1f44',
   icons: [{ src: 'icons/icon-192.png', sizes: '192x192', type: 'image/png' }, { src: 'icons/icon-512.png', sizes: '512x512', type: 'image/png' }],
 }, null, 2));
+
+// Link-preview card (og:image) shown when someone texts their score: logo + Darren on the grass
+{
+  const S = (f) => path.join(ROOT, 'public/sprites', f + '.png');
+  const up = async (f, k) => { const m = await sharp(S(f)).metadata(); return { buf: await sharp(S(f)).resize(Math.round(m.width * k), Math.round(m.height * k), { kernel: 'nearest' }).png().toBuffer(), w: Math.round(m.width * k), h: Math.round(m.height * k) }; };
+  const W = 1200, H = 630, groundH = 72;
+  const sky = Buffer.from(`<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}"><defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#03194f"/><stop offset="1" stop-color="#074bb5"/></linearGradient></defs><rect width="${W}" height="${H}" fill="url(#g)"/></svg>`);
+  const logo = await up('ui_logo', 2.6), darren = await up('darren_idle', 4.4), tile = await up('tile_ground', 3);
+  const layers = [{ input: logo.buf, left: Math.round((W - logo.w) / 2), top: 34 }, { input: darren.buf, left: Math.round((W - darren.w) / 2), top: H - groundH - darren.h + 6 }];
+  for (let x = 0; x < W; x += tile.w) layers.push({ input: tile.buf, left: x, top: H - groundH });
+  await sharp(sky).composite(layers).png().toFile(path.join(DIST, 'og-image.png'));
+}
 console.log('built dist/');

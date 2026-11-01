@@ -6,6 +6,7 @@ import { GameScene } from './scenes/GameScene.js';
 import { HUDScene } from './scenes/HUDScene.js';
 import { initControls, layout, input } from './controls.js';
 import { audio } from './audio.js';
+import { initFullscreen } from './fullscreen.js';
 
 const config = {
   type: Phaser.AUTO,
@@ -31,6 +32,7 @@ initControls({
   onPause: () => { const g = game.scene.getScene('Game'); if (g && g.scene.isActive() || (g && g.paused)) g.togglePause(); },
   onMute: () => { audio.toggleMute(); game.events.emit('mutechanged', audio.muted); },
 });
+initFullscreen();
 window.addEventListener('resize', () => layout(game));
 window.addEventListener('orientationchange', () => setTimeout(() => layout(game), 50));
 if (window.visualViewport) window.visualViewport.addEventListener('resize', () => layout(game));
@@ -38,6 +40,7 @@ layout(game);
 game.events.once('ready', () => layout(game));
 
 // Pause when the tab is hidden
+document.addEventListener('fullscreenchange', () => layout(game));
 document.addEventListener('visibilitychange', () => {
   if (document.hidden) { const g = game.scene.getScene('Game'); if (g && g.scene.isActive() && !g.paused) g.togglePause(); }
 });
